@@ -1,0 +1,6 @@
+# PulseID Configuration
+[configuration]
+registry_file = "registry.yaml"
+company_file = "company.yaml"
+auth_log_file = "auth_log.csv"
+logo_path = "company-logo.webp"

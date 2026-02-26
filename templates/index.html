@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseID Access Badge System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    :root {
+      --bg-dark: #0f0e17;
+      --bg-card: #1a1926;
+      --bg-input: #252336;
+      --border: #2d2b42;
+      --text: #e8e6f0;
+      --text-muted: #9d9ab8;
+      --accent-start: #6366f1;
+      --accent-end: #8b5cf6;
+      --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+      --success: #34d399;
+      --error: #f87171;
+      --info: #60a5fa;
+    }
+    body { background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+    .hero.is-primary { background: var(--gradient); }
+    .hero .title, .hero .subtitle { color: rgba(255,255,255,0.95); }
+    .section-title { color: var(--text); font-size: 1.25rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .card { background: var(--bg-card); border: 1px solid var(--border); box-shadow: none; }
+    .card-header { background: rgba(99, 102, 241, 0.15); border-bottom: 1px solid var(--border); }
+    .card-header-title { color: var(--text); font-size: 1.1rem; }
+    .card-content .content { color: var(--text-muted); }
+    .label { color: var(--text-muted); }
+    .input, .select select { background: var(--bg-input); border-color: var(--border); color: var(--text); }
+    .input::placeholder { color: var(--text-muted); opacity: 0.8; }
+    .input:focus, .select select:focus { border-color: var(--accent-start); }
+    .button.is-primary { background: var(--gradient); border: none; color: white; }
+    .button.is-primary:hover { opacity: 0.9; }
+    .button.is-link { background: var(--accent-start); color: white; }
+    .button.is-success { background: var(--success); color: #0f0e17; }
+    .button.is-danger { background: #dc2626; color: white; }
+    .button.is-light { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
+    .status-msg { min-height: 1.5em; margin-top: 0.5rem; }
+    .status-msg.success { color: var(--success); }
+    .status-msg.error { color: var(--error); }
+    .status-msg.info { color: var(--info); }
+    .box { background: var(--bg-card); border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <div class="container">
+        <div class="level">
+          <div class="level-left">
+            <div>
+              <h1 class="title">PulseID Access Badge System</h1>
+              <p class="subtitle">Register badges, record access, and download reports</p>
+            </div>
+          </div>
+          <div class="level-right">
+            <form method="post" action="{{ url_for('logout') }}" class="mb-0">
+              <button type="submit" class="button is-light is-small">Log out</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="columns">
+        <!-- Badge management -->
+        <div class="column is-half">
+          <h2 class="section-title">Badge management</h2>
+          <div class="columns is-multiline">
+            <div class="column is-full">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">Register</p>
+                </header>
+                <div class="card-content">
+                  <p class="content is-small mb-4">Associate a new badge with a person. Enter the name below, then hold the badge on the reader when prompted.</p>
+                  <div class="field">
+                    <label class="label">Full name</label>
+                    <div class="control">
+                      <input class="input" type="text" id="register-name" placeholder="e.g. Alice Todo" required>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <div class="control">
+                      <button class="button is-primary is-fullwidth" id="btn-register">Register badge</button>
+                    </div>
+                  </div>
+                  <p class="status-msg" id="register-status"></p>
+                </div>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">Record</p>
+                </header>
+                <div class="card-content">
+                  <p class="content is-small mb-4">Record an access event. Hold the badge on the reader to log the person and timestamp.</p>
+                  <div class="field">
+                    <div class="control">
+                      <button class="button is-link is-fullwidth" id="btn-record">Record badge</button>
+                    </div>
+                  </div>
+                  <p class="status-msg" id="record-status"></p>
+                </div>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">Remove from registry</p>
+                </header>
+                <div class="card-content">
+                  <p class="content is-small mb-4">Remove the badge holder and delete all their records. Hold the badge when prompted.</p>
+                  <div id="remove-initial">
+                    <div class="field">
+                      <div class="control">
+                        <button class="button is-danger is-fullwidth" id="btn-remove">Remove badge &amp; records</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="remove-confirm" class="is-hidden">
+                    <p class="content is-small mb-3">Are you sure? This will remove the person from the registry and delete all their records.</p>
+                    <div class="buttons">
+                      <button class="button is-danger" id="btn-remove-confirm">Confirm removal</button>
+                      <button class="button is-light" id="btn-remove-cancel">Cancel</button>
+                    </div>
+                  </div>
+                  <p class="status-msg" id="remove-status"></p>
+                </div>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">Remove records for period</p>
+                </header>
+                <div class="card-content">
+                  <p class="content is-small mb-4">Delete all access records for the badge on the reader for a selected month/year. Hold the badge when prompted.</p>
+                  <div class="field">
+                    <label class="label">Month</label>
+                    <div class="control">
+                      <div class="select is-fullwidth">
+                        <select id="remove-period-month"></select>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="label">Year</label>
+                    <div class="control">
+                      <div class="select is-fullwidth">
+                        <select id="remove-period-year"></select>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="remove-period-initial">
+                    <div class="field">
+                      <div class="control">
+                        <button class="button is-danger is-fullwidth" id="btn-remove-period">Remove records for this period</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="remove-period-confirm" class="is-hidden">
+                    <p class="content is-small mb-3">Are you sure? This will delete all records for the badge in the selected month.</p>
+                    <div class="buttons">
+                      <button class="button is-danger" id="btn-remove-period-confirm">Confirm</button>
+                      <button class="button is-light" id="btn-remove-period-cancel">Cancel</button>
+                    </div>
+                  </div>
+                  <p class="status-msg" id="remove-period-status"></p>
+                </div>
+              </div>
+            </div>
+            <div class="column is-half">
+              <div class="card">
+                <header class="card-header">
+                  <p class="card-header-title">Remove records before current month</p>
+                </header>
+                <div class="card-content">
+                  <p class="content is-small mb-4">Delete all access records for the badge on the reader before the current month (current month is kept). Hold the badge when prompted.</p>
+                  <div id="remove-before-initial">
+                    <div class="field">
+                      <div class="control">
+                        <button class="button is-danger is-fullwidth" id="btn-remove-before">Remove records before current month</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div id="remove-before-confirm" class="is-hidden">
+                    <p class="content is-small mb-3">Are you sure? This will delete all records for the badge before the current month.</p>
+                    <div class="buttons">
+                      <button class="button is-danger" id="btn-remove-before-confirm">Confirm</button>
+                      <button class="button is-light" id="btn-remove-before-cancel">Cancel</button>
+                    </div>
+                  </div>
+                  <p class="status-msg" id="remove-before-status"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Report download -->
+        <div class="column is-half">
+          <h2 class="section-title">Report download</h2>
+          <div class="card">
+            <header class="card-header">
+              <p class="card-header-title">Download report</p>
+            </header>
+            <div class="card-content">
+              <p class="content is-small mb-4">Generate and download the access report for the badge on the reader. Hold the employee badge when prompted. Choose full report or a specific month.</p>
+              <div class="field">
+                <label class="label">Period</label>
+                <div class="control">
+                  <div class="select is-fullwidth">
+                    <select id="report-period-type">
+                      <option value="full">Full report (all months)</option>
+                      <option value="month">Specific month</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div id="report-month-year" class="is-hidden">
+                <div class="field">
+                  <label class="label">Month</label>
+                  <div class="control">
+                    <div class="select is-fullwidth">
+                      <select id="report-month"></select>
+                    </div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label class="label">Year</label>
+                  <div class="control">
+                    <div class="select is-fullwidth">
+                      <select id="report-year"></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="control">
+                  <button class="button is-success is-fullwidth" id="btn-download">Download report</button>
+                </div>
+              </div>
+              <p class="status-msg" id="download-status"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const setStatus = (id, text, type) => {
+      const el = document.getElementById(id);
+      el.textContent = text || '';
+      el.className = 'status-msg ' + (type || '');
+    };
+
+    // Month/year options: any month/year up to current
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    const yearSelect = document.getElementById('report-year');
+    for (let y = currentYear; y >= currentYear - 10; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+
+    const monthSelect = document.getElementById('report-month');
+    function fillMonths(forYear) {
+      monthSelect.innerHTML = '';
+      const maxMonth = (forYear === currentYear) ? currentMonth : 12;
+      for (let m = 1; m <= maxMonth; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = monthNames[m - 1];
+        if (m === maxMonth) opt.selected = true;
+        monthSelect.appendChild(opt);
+      }
+    }
+    fillMonths(currentYear);
+    yearSelect.addEventListener('change', () => fillMonths(parseInt(yearSelect.value, 10)));
+
+    // Remove-period month/year (same range: up to current month/year)
+    const removePeriodYear = document.getElementById('remove-period-year');
+    const removePeriodMonth = document.getElementById('remove-period-month');
+    for (let y = currentYear; y >= currentYear - 10; y--) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      removePeriodYear.appendChild(opt);
+    }
+    function fillRemovePeriodMonths(forYear) {
+      removePeriodMonth.innerHTML = '';
+      const maxM = (forYear === currentYear) ? currentMonth : 12;
+      for (let m = 1; m <= maxM; m++) {
+        const opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = monthNames[m - 1];
+        if (m === maxM) opt.selected = true;
+        removePeriodMonth.appendChild(opt);
+      }
+    }
+    fillRemovePeriodMonths(currentYear);
+    removePeriodYear.addEventListener('change', () => fillRemovePeriodMonths(parseInt(removePeriodYear.value, 10)));
+
+    document.getElementById('report-period-type').addEventListener('change', function() {
+      document.getElementById('report-month-year').classList.toggle('is-hidden', this.value !== 'month');
+    });
+
+    document.getElementById('btn-register').addEventListener('click', async () => {
+      const nameInput = document.getElementById('register-name');
+      const name = (nameInput && nameInput.value || '').trim();
+      if (!name) {
+        setStatus('register-status', 'Please enter a name.', 'error');
+        return;
+      }
+      setStatus('register-status', 'Hold the badge on the reader...', 'info');
+      try {
+        const r = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const data = await r.json();
+        if (data.success) {
+          setStatus('register-status', data.message || 'Registered successfully.', 'success');
+        } else {
+          setStatus('register-status', data.message || 'Registration failed.', 'error');
+        }
+      } catch (e) {
+        setStatus('register-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-record').addEventListener('click', async () => {
+      setStatus('record-status', 'Hold the badge on the reader...', 'info');
+      try {
+        const r = await fetch('/api/record', { method: 'POST' });
+        const data = await r.json();
+        if (data.success) {
+          setStatus('record-status', data.message || 'Badge recorded.', 'success');
+        } else {
+          setStatus('record-status', data.message || 'Recording failed.', 'error');
+        }
+      } catch (e) {
+        setStatus('record-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-download').addEventListener('click', async () => {
+      const periodType = document.getElementById('report-period-type').value;
+      let body = {};
+      if (periodType === 'month') {
+        body = {
+          year: parseInt(document.getElementById('report-year').value, 10),
+          month: parseInt(document.getElementById('report-month').value, 10)
+        };
+      }
+      setStatus('download-status', 'Hold the employee badge on the reader...', 'info');
+      try {
+        const r = await fetch('/api/download-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!r.ok) {
+          const data = await r.json().catch(() => ({}));
+          setStatus('download-status', data.message || 'Failed to generate report.', 'error');
+          return;
+        }
+        const blob = await r.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = r.headers.get('Content-Disposition')?.split('filename=')[1]?.replace(/"/g, '') || 'badge_report.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        setStatus('download-status', 'Report downloaded.', 'success');
+      } catch (e) {
+        setStatus('download-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-remove').addEventListener('click', () => {
+      document.getElementById('remove-initial').classList.add('is-hidden');
+      document.getElementById('remove-confirm').classList.remove('is-hidden');
+      setStatus('remove-status', '', '');
+    });
+
+    document.getElementById('btn-remove-cancel').addEventListener('click', () => {
+      document.getElementById('remove-confirm').classList.add('is-hidden');
+      document.getElementById('remove-initial').classList.remove('is-hidden');
+      setStatus('remove-status', '', '');
+    });
+
+    document.getElementById('btn-remove-confirm').addEventListener('click', async () => {
+      setStatus('remove-status', 'Hold the badge on the reader...', 'info');
+      document.getElementById('remove-confirm').classList.add('is-hidden');
+      document.getElementById('remove-initial').classList.remove('is-hidden');
+      try {
+        const r = await fetch('/api/remove', { method: 'POST' });
+        const data = await r.json();
+        if (data.success) {
+          setStatus('remove-status', data.message || 'Removed.', 'success');
+        } else {
+          setStatus('remove-status', data.message || 'Failed.', 'error');
+        }
+      } catch (e) {
+        setStatus('remove-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-remove-period').addEventListener('click', () => {
+      document.getElementById('remove-period-initial').classList.add('is-hidden');
+      document.getElementById('remove-period-confirm').classList.remove('is-hidden');
+      setStatus('remove-period-status', '', '');
+    });
+    document.getElementById('btn-remove-period-cancel').addEventListener('click', () => {
+      document.getElementById('remove-period-confirm').classList.add('is-hidden');
+      document.getElementById('remove-period-initial').classList.remove('is-hidden');
+      setStatus('remove-period-status', '', '');
+    });
+    document.getElementById('btn-remove-period-confirm').addEventListener('click', async () => {
+      const year = parseInt(document.getElementById('remove-period-year').value, 10);
+      const month = parseInt(document.getElementById('remove-period-month').value, 10);
+      document.getElementById('remove-period-confirm').classList.add('is-hidden');
+      document.getElementById('remove-period-initial').classList.remove('is-hidden');
+      setStatus('remove-period-status', 'Hold the badge on the reader...', 'info');
+      try {
+        const r = await fetch('/api/remove-records-period', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year, month })
+        });
+        const data = await r.json();
+        if (data.success) {
+          setStatus('remove-period-status', data.message || 'Done.', 'success');
+        } else {
+          setStatus('remove-period-status', data.message || 'Failed.', 'error');
+        }
+      } catch (e) {
+        setStatus('remove-period-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-remove-before').addEventListener('click', () => {
+      document.getElementById('remove-before-initial').classList.add('is-hidden');
+      document.getElementById('remove-before-confirm').classList.remove('is-hidden');
+      setStatus('remove-before-status', '', '');
+    });
+    document.getElementById('btn-remove-before-cancel').addEventListener('click', () => {
+      document.getElementById('remove-before-confirm').classList.add('is-hidden');
+      document.getElementById('remove-before-initial').classList.remove('is-hidden');
+      setStatus('remove-before-status', '', '');
+    });
+    document.getElementById('btn-remove-before-confirm').addEventListener('click', async () => {
+      document.getElementById('remove-before-confirm').classList.add('is-hidden');
+      document.getElementById('remove-before-initial').classList.remove('is-hidden');
+      setStatus('remove-before-status', 'Hold the badge on the reader...', 'info');
+      try {
+        const r = await fetch('/api/remove-records-before-current-month', { method: 'POST' });
+        const data = await r.json();
+        if (data.success) {
+          setStatus('remove-before-status', data.message || 'Done.', 'success');
+        } else {
+          setStatus('remove-before-status', data.message || 'Failed.', 'error');
+        }
+      } catch (e) {
+        setStatus('remove-before-status', 'Request failed: ' + e.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login – PulseID Access Badge System</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <style>
+    :root {
+      --bg-dark: #0f0e17;
+      --bg-card: #1a1926;
+      --bg-input: #252336;
+      --border: #2d2b42;
+      --text: #e8e6f0;
+      --text-muted: #9d9ab8;
+      --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+    }
+    body { background: var(--bg-dark); color: var(--text); min-height: 100vh; }
+    .hero.is-primary { background: var(--gradient); }
+    .hero .title { color: rgba(255,255,255,0.95); }
+    .login-box { max-width: 400px; margin: 0 auto; }
+    .box { background: var(--bg-card); border: 1px solid var(--border); }
+    .box .subtitle { color: var(--text-muted); }
+    .label { color: var(--text-muted); }
+    .input { background: var(--bg-input); border-color: var(--border); color: var(--text); }
+    .button.is-primary { background: var(--gradient); border: none; color: white; }
+    .notification.is-danger { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid #f87171; }
+  </style>
+</head>
+<body>
+  <section class="hero is-primary is-fullheight">
+    <div class="hero-body">
+      <div class="container">
+        <div class="login-box">
+          <h1 class="title has-text-white has-text-centered mb-5">PulseID Access Badge System</h1>
+          <div class="box">
+            <h2 class="subtitle has-text-centered">Sign in</h2>
+            {% if error %}
+            <div class="notification is-danger is-light">{{ error }}</div>
+            {% endif %}
+            <form method="post" action="{{ url_for('login') }}">
+              <div class="field">
+                <label class="label">Username</label>
+                <div class="control">
+                  <input class="input" type="text" name="username" required autofocus>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Password</label>
+                <div class="control">
+                  <input class="input" type="password" name="password" required>
+                </div>
+              </div>
+              <div class="field">
+                <div class="control">
+                  <button class="button is-primary is-fullwidth" type="submit">Log in</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
