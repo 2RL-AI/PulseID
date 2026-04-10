@@ -205,6 +205,15 @@ def build_report_pdf(employee_name, uid, records, company_info=None, logo_path=N
     if not by_month:
         raise ValueError("No valid dated records to report.")
 
+    if filter_year is not None and filter_month is not None:
+        period_str = datetime(filter_year, filter_month, 1).strftime("%B %Y")
+    else:
+        first = by_month[0][1]
+        last = by_month[-1][1]
+        period_str = first if first == last else f"{first} - {last}"
+
+    pdf_title = f"PulseID - {employee_name} - {period_str}"
+
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf,
@@ -213,6 +222,7 @@ def build_report_pdf(employee_name, uid, records, company_info=None, logo_path=N
         leftMargin=DOC_LEFT_MARGIN,
         topMargin=3.0 * cm,
         bottomMargin=2.2 * cm,
+        title=pdf_title,
     )
 
     company = company_info or {}

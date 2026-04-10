@@ -2,23 +2,15 @@ import os
 import secrets
 
 
-def _secure_default(env_var, fallback_prefix="pulseid"):
-    """Return env var value, or generate a persistent random key for development."""
-    val = os.environ.get(env_var, "")
-    if val and val not in ("change-me-in-production", ""):
-        return val
-    return secrets.token_hex(32)
-
-
 class Config:
-    SECRET_KEY = _secure_default("PULSEID_SECRET_KEY")
+    SECRET_KEY = os.environ.get("PULSEID_SECRET_KEY", "") or secrets.token_hex(32)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
         "postgresql://pulseid:pulseid_secret@localhost:5432/pulseid",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    API_KEY = _secure_default("PULSEID_API_KEY")
+    API_KEY = os.environ.get("PULSEID_API_KEY", "change-me-in-production")
     ADMIN_USERNAME = os.environ.get("PULSEID_USERNAME", "admin")
     ADMIN_PASSWORD = os.environ.get("PULSEID_PASSWORD", "admin")
 

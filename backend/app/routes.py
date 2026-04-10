@@ -291,8 +291,12 @@ def download_report():
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
-    suffix = f"_{year}_{month:02d}" if year is not None and month is not None else ""
-    filename = f"badge_report_{emp.full_name.replace(' ', '_')}{suffix}.pdf"
+    if year is not None and month is not None:
+        from datetime import datetime as _dt
+        period = _dt(year, month, 1).strftime("%B_%Y")
+    else:
+        period = "full"
+    filename = f"PulseID_{emp.full_name.replace(' ', '_')}_{period}.pdf"
     return send_file(buf, mimetype="application/pdf", as_attachment=True, download_name=filename)
 
 
