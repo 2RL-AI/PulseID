@@ -1,8 +1,0 @@
-nfcpy>=0.13.5
-pyserial>=3.5
-pyscard>=2.0.7
-PyYAML>=6.0
-reportlab>=4.0
-Pillow>=10.0
-flask>=3.0
-tomli>=2.0; python_version < "3.11"

@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pulseid
+      POSTGRES_USER: pulseid
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pulseid_secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulseid"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://pulseid:${POSTGRES_PASSWORD:-pulseid_secret}@db:5432/pulseid
+      PULSEID_API_KEY: ${PULSEID_API_KEY:-change-me-in-production}
+      PULSEID_SECRET_KEY: ${PULSEID_SECRET_KEY:-change-me-in-production}
+      PULSEID_USERNAME: ${PULSEID_USERNAME:-admin}
+      PULSEID_PASSWORD: ${PULSEID_PASSWORD:-admin}
+      PULSEID_READER_FILTER: ${PULSEID_READER_FILTER:-}
+      COMPANY_NAME: ${COMPANY_NAME:-}
+      COMPANY_STREET: ${COMPANY_STREET:-}
+      COMPANY_CITY: ${COMPANY_CITY:-}
+      COMPANY_ZIP: ${COMPANY_ZIP:-}
+      COMPANY_COUNTRY: ${COMPANY_COUNTRY:-}
+      COMPANY_PHONE: ${COMPANY_PHONE:-}
+      COMPANY_EMAIL: ${COMPANY_EMAIL:-}
+      LOGO_PATH: ${LOGO_PATH:-}
+    ports:
+      - "5005:5005"
+    depends_on:
+      db:
+        condition: service_healthy
+    # ── NFC Reader Access ──────────────────────────────────
+    # Linux: uncomment these two lines for USB passthrough:
+    # privileged: true
+    # volumes:
+    #   - /dev/bus/usb:/dev/bus/usb
+    #
+    # macOS: USB passthrough is NOT supported by Docker Desktop.
+    # Use "make dev-backend" to run the backend natively on macOS
+    # while keeping db + frontend in Docker. See README.
+
+  frontend:
+    build: ./frontend
+    environment:
+      PULSEID_API_KEY: ${PULSEID_API_KEY:-change-me-in-production}
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:

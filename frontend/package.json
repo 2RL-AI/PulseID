@@ -1,0 +1,26 @@
+{
+  "name": "pulseid-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5",
+    "vuetify": "^3.7",
+    "vue-router": "^4.5",
+    "pinia": "^2.3",
+    "ky": "^1.7",
+    "@mdi/font": "^7.4",
+    "vue-i18n": "^9.14"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2",
+    "vite": "^6.2",
+    "vite-plugin-vuetify": "^2.0",
+    "sass": "^1.83"
+  }
+}

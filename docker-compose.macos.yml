@@ -1,0 +1,14 @@
+# macOS override: disables the backend container so you can run it natively
+# with direct USB/NFC reader access.
+#
+# Usage:
+#   make dev-macos       (starts db + frontend)
+#   make dev-backend     (in a separate terminal — runs backend natively)
+services:
+  backend:
+    profiles:
+      - disabled
+
+  frontend:
+    volumes:
+      - ./frontend/nginx-macos.conf.template:/etc/nginx/templates/default.conf.template:ro

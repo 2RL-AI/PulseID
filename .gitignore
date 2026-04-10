@@ -219,3 +219,13 @@ __marimo__/
 company-2rl.yaml
 2rl.toml
 2rl/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Backend
+backend/backups/
+
+# Docker
+pgdata/

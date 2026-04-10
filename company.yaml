@@ -1,9 +1,0 @@
-company:
-  name: Company Name
-  address:
-    street: Company Address
-    city: Company City
-    zip: Company Zip
-    country: Company Country
-  phone: +1 234 567 8900
-  email: info@company.com
